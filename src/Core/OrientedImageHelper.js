@@ -1,30 +1,13 @@
-import { Euler } from 'three';
+import { Euler, Matrix4 } from 'three';
 import Coordinates from './Geographic/Coordinates';
 
 function toCoord(ori, offset) {
     return new Coordinates('EPSG:2154', ori.easting + offset.x, ori.northing + offset.y, ori.altitude + offset.z);
 }
+
 function toCoordGeographic(ori) {
     return new Coordinates('EPSG:4326', ori.longitude, ori.latitude, ori.height);
 }
-
-// function toOri(ori) {
-//     const d2r = Math.PI / 180;
-//     return new Euler(
-//         ori.pitch * d2r,
-//         ori.roll * d2r,
-//         ori.heading * d2r, 'ZXY');
-// }
-
-// export const oiStereopolis = {
-//     toCoord,
-//     toOri,
-//     offset: {
-//         x: 0,
-//         y: 0,
-//         z: 0,
-//     },
-// };
 
 function toOriMicMac(ori) {
     const d2r = Math.PI / 180;
@@ -65,6 +48,11 @@ export const oiMontBlanc = {
 };
 
 export default {
+
+    toCoordGeographic(ori) {
+        return new Coordinates('EPSG:4326', ori.longitude, ori.latitude, ori.height);
+    },
+
     decode(arrayOE, convert) {
         if (!arrayOE || !(arrayOE instanceof Array)) {
             throw new Error('lol');
@@ -81,5 +69,58 @@ export default {
         }
         return result;
     },
-    
+
+    parseInfoEastingNorthAltitudeToCoordinate(projection, info, offset) {
+        return new Coordinates(projection, info.easting + offset.x, info.northing + offset.y, info.altitude + offset.z);
+    },
+
+    parseMicMacOrientationToMatrix(panoramic) {
+        const d2r = Math.PI / 180;
+        const euler = new Euler(
+            panoramic.roll * d2r,
+            panoramic.pitch * d2r,
+            panoramic.heading * d2r,
+            'XYZ');
+
+        const matrixFromEuler = new Matrix4().makeRotationFromEuler(euler);
+
+        // The three angles ω,ɸ,k are computed
+        // for a traditionnal image coordinate system (X=colomns left to right and Y=lines bottom up)
+        // and not for a computer vision compliant geometry (X=colomns left to right and Y=lines top down)
+        // so we have to multiply to rotation matrix by this matrix :
+        var inverseYZ = new Matrix4().set(
+                1, 0, 0, 0,
+                0, -1, 0, 0,
+                0, 0, -1, 0,
+                0, 0, 0, 1);
+
+        matrixFromEuler.multiply(inverseYZ);
+
+        return matrixFromEuler;
+    },
+
+    parseSuisseOrientationToMatrix(panoramic) {
+        const d2r = Math.PI / 180;
+        const euler = new Euler(
+            panoramic.tilt * d2r,
+            panoramic.azimuth * d2r,
+            panoramic.roll * d2r,
+            'ZYX');
+
+        const matrixFromEuler = new Matrix4().makeRotationFromEuler(euler);
+
+        // // The three angles ω,ɸ,k are computed
+        // // for a traditionnal image coordinate system (X=colomns left to right and Y=lines bottom up)
+        // // and not for a computer vision compliant geometry (X=colomns left to right and Y=lines top down)
+        // // so we have to multiply to rotation matrix by this matrix :
+        // var inverseYZ = new Matrix4().set(
+        //         1, 0, 0, 0,
+        //         0, -1, 0, 0,
+        //         0, 0, -1, 0,
+        //         0, 0, 0, 1);
+
+        // matrixFromEuler.multiply(inverseYZ);
+
+        return matrixFromEuler;
+    },
 };

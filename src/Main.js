@@ -39,5 +39,5 @@ export { default as GeoJSON2Features } from './Renderer/ThreeExtended/GeoJSON2Fe
 export { default as FeaturesUtils } from './Renderer/ThreeExtended/FeaturesUtils';
 export { CONTROL_EVENTS } from './Renderer/ThreeExtended/GlobeControls';
 export { default as DEMUtils } from './utils/DEMUtils';
-export { default as OrientedImageDecoder, oiStereopolis, oiMicMac, oiMontBlanc } from './Core/OrientedImageHelper';
+export { default as OrientedImageHelper, oiStereopolis, oiMicMac, oiMontBlanc } from './Core/OrientedImageHelper';
 export { default as format } from 'string-format';
